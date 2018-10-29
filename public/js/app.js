@@ -1,1 +1,1 @@
-alert('I was called!');
+console.log('Everything is being succesfully called!');
