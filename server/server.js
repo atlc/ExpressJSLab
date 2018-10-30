@@ -7,9 +7,14 @@ let dataFile = path.join(__dirname, '../public/data.json');
 
 let app = express();
 
+let port = 3000;
+app.listen(port, () => {
+    console.log(`Listening on port ${port}`);
+});
+
 app.use(express.static(path.join(__dirname, '../public')));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 app.use((req, res, next) => {
     console.log(req.url);
@@ -47,5 +52,3 @@ app.get('/formsubmissions', (req, res) => {
         }
     });
 });
-
-app.listen(3000);
