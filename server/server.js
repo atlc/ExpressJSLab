@@ -3,9 +3,9 @@ const path = require('path');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 
-let app = express();
-
 let dataFile = path.join(__dirname, '../public/data.json');
+
+let app = express();
 
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(bodyParser.json());
@@ -17,29 +17,35 @@ app.use((req, res, next) => {
 });
 
 app.post('/signup', (req, res) => {
-    let organDonorInfo = JSON.stringify({
+    let newOrganDonorInfo = ({
         "name": req.body.name,
         "address": req.body.address,
         "email": req.body.email,
         "password": req.body.password
     });
-    
-    console.log(organDonorInfo);
 
-    fs.readFileSync(dataFile, (err, data) => {
-        if (err) throw err;
-        let humanInfo = JSON.parse(data);
-        console.log(humanInfo)
-        humanInfo.push(organDonorInfo);
-        console.log(humanInfo);
-        fs.appendFileSync(dataFile, JSON.stringify(humanInfo));
-    });
-    
-    res.send('Thanks for letting us harvest your data! A representative will be by to collect blood and other human samples shortly.');
+    try {
+        fs.accessSync(dataFile, fs.constants.R_OK | fs.constants.W_OK);
+        let donorData = JSON.parse(fs.readFileSync(dataFile, 'utf-8', (err) => { if (err) throw err; }));
+        donorData.push(newOrganDonorInfo);
+        fs.writeFileSync(dataFile, JSON.stringify(donorData, null, 2), 'utf-8', (err) => { if (err) throw err; });
+    } catch (err) {
+        throw err;
+    }
+
+    res.send('Thanks for letting us harvest your data! A representative will be by to harvest blood and other samples shortly!');
 });
 
-app.get('/data', (req, res) => {
-    res.send(JSON.parse(fs.readFileSync(dataFile, (err) => { if (err) throw err; })));
+app.get('/formsubmissions', (req, res) => {
+    let dataString = JSON.parse(fs.readFileSync(dataFile, (err) => { if (err) throw err; }));
+    // Prints in an expanded JSON format, instead of collapsing to 1 line
+    res.format({
+        'text/html': function(){
+            res.send(
+                `<pre>${JSON.stringify(dataString, null, 2)}</pre>`
+            );
+        }
+    });
 });
 
 app.listen(3000);
